@@ -9,9 +9,18 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 public class GosuMemoryLoader {
+    /**
+     * URL of the json file outputed by gosu-memory. The default value that gosu-memory specified is <a href="http://localhost:24050/json">http://localhost:24050/json</a>
+     */
     public URL jsonURL;
+    /**
+     * Jackson data-binding's ObjectMapper to parse the json data into our data structure
+     */
     public ObjectMapper mapper;
 
+    /**
+     * Create a gosu-memory data loader
+     */
     public GosuMemoryLoader() {
         try {
             jsonURL = new URL("http://localhost:24050/json");   //default json URL
@@ -30,6 +39,11 @@ public class GosuMemoryLoader {
         mapper.configure(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE, false);
     }
 
+    /**
+     * Load current osu! memory data from <code>jsonURL</code>
+     * @return the parsed data
+     * @throws IOException if an I/O error occurred, most likely that <code>jsonURL</code> is set to a different value, or gosu-memory is not running
+     */
     public GosuMemData load() throws IOException {
         return mapper.readValue(jsonURL, GosuMemData.class);
     }
