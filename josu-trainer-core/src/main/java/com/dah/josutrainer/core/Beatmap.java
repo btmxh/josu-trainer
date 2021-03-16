@@ -157,4 +157,47 @@ public class Beatmap {
         String line = lines.get(getPropertyLineIndex(section, key));
         return line.substring(key.length() + 1);
     }
+
+    /**
+     * Get beatmap's property in <code>section</code> and for <code>key</code> as a double
+     * @param section section of the property
+     * @param key key of the property
+     * @return the double value of the property, or null if the property doesn't exist
+     */
+    public double getDouble(String section, String key) {
+        String value = get(section, key);
+        try {
+            return Double.parseDouble(value.trim());
+        } catch (Exception ex) {
+            System.out.println("WARNING: Invalid double value: '" + value + "'. Using default 0 instead");
+            return 0;
+        }
+    }
+
+    /**
+     * Get beatmap's property in <code>section</code> and for <code>key</code> as a long
+     * @param section section of the property
+     * @param key key of the property
+     * @return the long value of the property, or null if the property doesn't exist
+     */
+    public long getLong(String section, String key) {
+        String value = get(section, key);
+        try {
+            return Long.parseLong(value.trim());
+        } catch (Exception ex) {
+            System.out.println("WARNING: Invalid long value: '" + value + "'. Using default 0 instead");
+            return 0;
+        }
+    }
+
+    /**
+     * Set beatmap's property in <code>section</code> and for <code>key</code> to <code>value</code>, rounded to <code>decimal</code> decimal digits
+     * @param section section of the property
+     * @param key key of the property
+     * @param value double value of the property
+     * @param decimal the number of decimal digits to round the double value
+     */
+    public void set(String section, String key, double value, int decimal) {
+        set(section, key, String.format("%.0" + decimal + "f", value));
+    }
 }
