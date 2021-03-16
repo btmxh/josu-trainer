@@ -248,4 +248,65 @@ public class Beatmap {
     private boolean isBlank(String line) {
         return line.chars().anyMatch(c -> !Character.isWhitespace(c));
     }
+
+    /**
+     * Set approach rate (AR) value
+     * @param ar AR value
+     */
+    public void setAR(double ar) {
+        set("Difficulty", "ApproachRate", ar, 1);
+    }
+
+    /**
+     * Set approach rate (AR) value
+     * @param cs AR value
+     */
+    public void setCS(double cs) {
+        set("Difficulty", "CircleSize", cs, 1);
+    }
+
+    /**
+     * Set overall difficulty (OD) value
+     * @param od OD value
+     */
+    public void setOD(double od) {
+        set("Difficulty", "OverallDifficulty", od, 1);
+    }
+
+    /**
+     * Set HP drain rate (HP) value
+     * @param hp HP value
+     */
+    public void setHP(double hp) {
+        set("Difficulty", "HPDrainRate", hp, 1);
+    }
+
+    /**
+     * Create new audio file that is the speed up/slow down version of current audio by <code>rate</code> times.
+     * @param rate the speed up rate of new audio file (>1.0 - faster, 1.0 - ignored, <1.0 - slower)
+     * @return the output file name (in mapset directory)
+     */
+    private String speedUpAudio(double rate) {
+
+    }
+
+    /**
+     * Speed up this map by <code>rate</code> times. <br>
+     * WARNING: This will remove all storyboard/video entries of the map
+     * @param rate speed up rate of the new map (>1.0 - faster, 1.0 - same speed, <1.0 - slower)
+     * @see #slowDown(double)
+     */
+    public void speedUp(double rate) {
+
+    }
+
+    /**
+     * Slow down this map by <code>rate</code> times. Same behavior as calling <code>speedUp(1.0 / rate)</code> <br>
+     * WARNING: This will remove all storyboard/video entries of the map
+     * @param rate speed up rate of the new map (>1.0 - slower, 1.0 - same speed, <1.0 - faster)
+     * @see #speedUp(double)
+     */
+    public void slowDown(double rate) {
+        speedUp(1.0 / rate);
+    }
 }
