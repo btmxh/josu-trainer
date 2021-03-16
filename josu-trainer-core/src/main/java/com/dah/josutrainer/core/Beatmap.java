@@ -5,18 +5,21 @@ import com.dah.gmi.data.GosuBeatmapPath;
 import com.dah.gmi.data.GosuFolders;
 import com.dah.gmi.data.GosuMemData;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * A osu! beatmap, in which content are loaded to memory and can be saved by calling {@link #save()} or {@link #save(String)}
@@ -85,6 +88,13 @@ public class Beatmap {
      * @throws IOException if an I/O exception occurred
      */
     public void save() throws IOException {
+        if(speedUpRate != 1.0) {
+            String newAudioFilename = speedUpAudio();
+            if(newAudioFilename != null) {
+                set("General", "AudioFilename", newAudioFilename);
+            }
+        }
+        scaleBeatmapTiming();
         Files.write(mapFile, lines, StandardCharsets.UTF_8, StandardOpenOption.CREATE);
     }
 
@@ -96,7 +106,7 @@ public class Beatmap {
      */
     public void save(String diffName) throws IOException {
         if(diffName != null) {
-            //TODO: change diff name
+            set("Metadata", "Version", diffName);
         }
         save();
     }
@@ -174,13 +184,7 @@ public class Beatmap {
      * @return the double value of the property, or null if the property doesn't exist
      */
     public double getDouble(String section, String key) {
-        String value = get(section, key);
-        try {
-            return Double.parseDouble(value.trim());
-        } catch (Exception ex) {
-            System.out.println("WARNING: Invalid double value: '" + value + "'. Using default 0 instead");
-            return 0;
-        }
+        return parseDoubleSafe(get(section, key));
     }
 
     /**
@@ -190,13 +194,7 @@ public class Beatmap {
      * @return the long value of the property, or null if the property doesn't exist
      */
     public long getLong(String section, String key) {
-        String value = get(section, key);
-        try {
-            return Long.parseLong(value.trim());
-        } catch (Exception ex) {
-            System.out.println("WARNING: Invalid long value: '" + value + "'. Using default 0 instead");
-            return 0;
-        }
+        return parseLongSafe(get(section, key));
     }
 
     /**
@@ -242,11 +240,15 @@ public class Beatmap {
             if(line.startsWith("//") || isBlank(line))   continue;
             if(isSectionHeader(line))   break;
             String[] separatedValues = line.split(",");
-            String[] returnedValues = process.apply(separatedValues);
-            if(returnedValues == null) {
-                it.remove();
-            } else {
-                it.set(String.join(",", returnedValues));
+            try {
+                String[] returnedValues = process.apply(separatedValues);
+                if(returnedValues == null) {
+                    it.remove();
+                } else {
+                    it.set(String.join(",", returnedValues));
+                }
+            } catch (IndexOutOfBoundsException ex) {
+                System.out.println("An IndexOutOfBoundsException occurred when processing CSV line: '" + line + "'. Ignoring that for now.");
             }
         }
     }
@@ -360,5 +362,79 @@ public class Beatmap {
      */
     public void slowDown(double rate) {
         speedUp(1.0 / rate);
+    }
+
+    //Helper function, should be self explanatory
+    private String divideLong(String str) {
+        return Long.toString((long) (parseLongSafe(str) / speedUpRate));
+    }
+
+    private String divideDouble(String str) {
+        return Double.toString(parseDoubleSafe(str) / speedUpRate);
+    }
+
+    private void scaleBeatmapTiming() {
+        String bookmarks = get("Editor", "Bookmarks");
+        if(bookmarks != null) {
+            //scale all bookmarks
+            bookmarks = Arrays.stream(bookmarks.split(","))
+                    .mapToLong(this::parseLongSafe)
+                    .map(l -> (long) (l / speedUpRate))
+                    .mapToObj(String::valueOf)
+                    .collect(Collectors.joining(","));
+            set("Editor", "Bookmarks", bookmarks);
+        }
+
+        processCSVValues("Events", tokens -> {
+            switch(tokens[0].trim()) {
+                case "Video":
+                case "1": //Video (disabled)
+                    return null;
+                case "Break":
+                case "2": //Break
+                    tokens[1] = divideLong(tokens[1]);  //start time
+                    tokens[2] = divideLong(tokens[2]);  //end time
+            }
+            return tokens;
+        });
+
+        processCSVValues("TimingPoints", tokens -> {
+            tokens[0] = divideLong(tokens[0]);
+            double beatLength = parseDoubleSafe(tokens[1]);
+            if(beatLength > 0) {
+                //beatLength can be negative when it's indicating slider velocity, we don't need to change that
+                tokens[1] = divideDouble(tokens[1]);
+            }
+
+            return tokens;
+        });
+
+        processCSVValues("HitObjects", tokens -> {
+            long type = parseLongSafe(tokens[3]);   //type of hit object
+            tokens[2] = divideLong(tokens[2]);      //hit object's time
+            if((type & 0b1000) != 0) {
+                //this is a spinner
+                tokens[5] = divideLong(tokens[5]);  //divide the spinner length
+            }
+            return tokens;
+        });
+    }
+
+    private long parseLongSafe(String s) {
+        try {
+            return Long.parseLong(s);
+        } catch (NumberFormatException | NullPointerException e) {
+            System.out.println("WARNING: Invalid integer value '" + s + "'");
+            return 0L;
+        }
+    }
+
+    private double parseDoubleSafe(String s) {
+        try {
+            return Double.parseDouble(s);
+        } catch (NumberFormatException | NullPointerException e) {
+            System.out.println("WARNING: Invalid decimal value '" + s + "'");
+            return 0.0;
+        }
     }
 }
