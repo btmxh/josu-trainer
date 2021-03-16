@@ -1,0 +1,4 @@
+rootProject.name = 'josu-trainer'
+include 'gosu-memory-interop'
+include 'josu-trainer-core'
+
