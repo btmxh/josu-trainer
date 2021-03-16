@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * A osu! beatmap, in which content are loaded to memory and can be saved by calling {@link #save()} or {@link #save(String)}
@@ -89,5 +90,71 @@ public class Beatmap {
             //TODO: change diff name
         }
         save();
+    }
+
+    /**
+     * Test whether a line is a section header or not (example: [General]). A section header must start with '[' and ends with ']' (after trimming all trailing whitespaces)
+     * @param line line content
+     * @return whether <code>line</code> is a section header or not.
+     */
+    private static boolean isSectionHeader(String line) {
+        line = line.trim();
+        return line.startsWith("[") && line.endsWith("]");
+    }
+
+    /**
+     * Find a line that matches the given predicate from line number <code>from</code> to whenever <code>to</code> returns true. <br>
+     * This method will return -1 if no matches found.
+     * @param from index of first line in range
+     * @param p predicate to match
+     * @param to predicate to exit the finding process
+     * @return index of the first line that matches <code>p</code>
+     */
+    private int findLine(int from, Predicate<String> p, Predicate<String> to) {
+        for(int i = from; i < lines.size(); i++) {
+            if(p.test(lines.get(i)))    return i;
+            if(to.test(lines.get(i)))   break;
+        }
+        return -1;
+    }
+
+    /**
+     * Get property line's index from <code>section</code> and <code>key</code>. <br>
+     * If <code>key</code> is null, return the index of the section line instead
+     * @param section section of the property (for example: General)
+     * @param key key of the property (for example: AudioFilename)
+     * @return index of property line, or the section line if <code>key</code> is null
+     */
+    private int getPropertyLineIndex(String section, String key) {
+        int sectionLine = findLine(0, s -> s.trim().equals("[" + section + "]"), s -> false);
+        if(sectionLine < 0 || key == null)     return -1;
+        return findLine(sectionLine + 1, p -> p.startsWith(key + ":"), Beatmap::isSectionHeader);
+    }
+
+    /**
+     * Set beatmap's property in <code>section</code> and for <code>key</code> to <code>value.toString()</code>
+     * @param section section of the property
+     * @param key key of the property
+     * @param value value of the property
+     */
+    public void set(String section, String key, Object value) {
+        int idx = getPropertyLineIndex(section, key);
+        if(idx < 0) {
+            lines.add(idx = getPropertyLineIndex(section, null) + 1, null);
+        }
+        lines.set(idx, key + ":" + value);
+    }
+
+    /**
+     * Get beatmap's property in <code>section</code> and for <code>key</code>
+     * @param section section of the property
+     * @param key key of the property
+     * @return the value of the property, or null if the property doesn't exist
+     */
+    public String get(String section, String key) {
+        int idx = getPropertyLineIndex(section, key);
+        if(idx == -1)   return null;
+        String line = lines.get(getPropertyLineIndex(section, key));
+        return line.substring(key.length() + 1);
     }
 }
