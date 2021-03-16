@@ -5,14 +5,16 @@ import com.dah.gmi.data.GosuBeatmapPath;
 import com.dah.gmi.data.GosuFolders;
 import com.dah.gmi.data.GosuMemData;
 
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -20,6 +22,7 @@ import java.util.function.Predicate;
  * A osu! beatmap, in which content are loaded to memory and can be saved by calling {@link #save()} or {@link #save(String)}
  */
 public class Beatmap {
+    public static final String FFMPEG = "ffmpeg";   //TODO: make this customizable
     /**
      * <code>.osu</code> file content loaded into memory
      */
@@ -32,6 +35,10 @@ public class Beatmap {
      * The <code>.osu</code> file of this beatmap. This is the original file that this map was generated from, and will not change when calling {@link #save()}
      */
     private final Path mapFile;
+    /**
+     * Current speed up rate of the beatmap (>1.0 - faster, 1.0 - normal speed, <1.0 - slower)
+     */
+    private double speedUpRate = 1.0;
 
     /**
      * Load beatmap data from <code>beatmapFile</code>.
@@ -39,7 +46,7 @@ public class Beatmap {
      * @throws IOException if an I/O exception occurred
      */
     public Beatmap(Path beatmapFile) throws IOException {
-        lines = Files.readAllLines(beatmapFile, StandardCharsets.UTF_8);
+        lines = new ArrayList<>(Files.readAllLines(beatmapFile, StandardCharsets.UTF_8));
         mapFile = beatmapFile;
         mapsetDir = beatmapFile.getParent();
     }
@@ -249,6 +256,19 @@ public class Beatmap {
         return line.chars().anyMatch(c -> !Character.isWhitespace(c));
     }
 
+    //Java 8 alternative for Java 9's InputStream.transferTo(OutputStream) method (with some modifications)
+    private void transferTo(InputStream inputStream, OutputStream outputStream) {
+        try {
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = inputStream.read(buffer)) >= 0) {
+                outputStream.write(buffer, 0, read);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();    //Logging ffmpeg output is not that important, we can suppress the error.
+        }
+    }
+
     /**
      * Set approach rate (AR) value
      * @param ar AR value
@@ -282,12 +302,44 @@ public class Beatmap {
     }
 
     /**
-     * Create new audio file that is the speed up/slow down version of current audio by <code>rate</code> times.
-     * @param rate the speed up rate of new audio file (>1.0 - faster, 1.0 - ignored, <1.0 - slower)
+     * Create new audio file that is the speed up/slow down version of current audio by {@link #speedUpRate} times.
      * @return the output file name (in mapset directory)
      */
-    private String speedUpAudio(double rate) {
+    private String speedUpAudio() throws IOException {
+        String oldAudio = get("General", "AudioFilename");
+        if(oldAudio == null || isBlank(oldAudio))   return null;
+        String newFilename = "josutrainer-audio-" + speedUpRate + ".mp3";
+        Path newFile = mapsetDir.resolve(newFilename);
+        double rate = speedUpRate;
+        if(!Files.exists(newFile)) {
+            StringBuilder atempo = new StringBuilder();
+            while(rate > 2.0) {
+                atempo.append("atempo=2.0,");
+                rate /= 2.0;
+            }
+            while(rate < 0.5) {
+                atempo.append("atempo=0.5,");
+                rate /= 0.5;
+            }
+            atempo.append("atempo=").append(rate);
+            String cmd =  "\"" + FFMPEG + "\" -i \"" + oldAudio + "\" -filter:a \"" + atempo + "\" -vn \"" + newFile.toAbsolutePath().toString() + "\" -y";
+            System.out.println(cmd);
+            Process process = Runtime.getRuntime().exec(cmd);
+            new Thread(() -> transferTo(process.getInputStream(), System.out)).start();
+            new Thread(() -> transferTo(process.getErrorStream(), System.err)).start();
+            new Thread(() -> {
+                try {
+                    int err = process.waitFor();
+                    if(err != 0) {
+                        System.err.println("ffmpeg error code " + err);
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        }
 
+        return newFilename;
     }
 
     /**
@@ -297,7 +349,7 @@ public class Beatmap {
      * @see #slowDown(double)
      */
     public void speedUp(double rate) {
-
+        speedUpRate = Math.min(Math.max(speedUpRate * rate, 0.01), 100.0);
     }
 
     /**
