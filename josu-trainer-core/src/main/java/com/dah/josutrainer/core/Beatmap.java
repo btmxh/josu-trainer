@@ -12,6 +12,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
@@ -199,5 +201,51 @@ public class Beatmap {
      */
     public void set(String section, String key, double value, int decimal) {
         set(section, key, String.format("%.0" + decimal + "f", value));
+    }
+
+    /**
+     * Create beatmap new filename depending on the modified properties
+     * @return the beatmap's new filename
+     */
+    private String createFilename() {
+        String name = get("Metadata", "Artist") + " - " +
+                get("Metadata", "Title") + " (" +
+                get("Metadata", "Creator") + ") [" +
+                get("Metadata", "Version") + "].osu";
+
+        String remove = "\\/:*?\"<>|";
+        for(int i = 0; i < remove.length(); i++) {
+            char c = remove.charAt(i);
+            name = name.replace(c, '_');
+        }
+        return name;
+    }
+
+    /**
+     * Process comma separated values in <code>section</code>.
+     * <code>process</code> function will take in the splited value array for every line to operate on it. The returned array will be joined into a line and it will replace the original line. If the returned array is null, then the original line will be simply removed.
+     * @param section section to process
+     * @param process the process function
+     */
+    private void processCSVValues(String section, Function<String[], String[]> process) {
+        int idx = findLine(0, s -> s.trim().equals("[" + section + "]"), s -> false);
+        ListIterator<String> it = lines.listIterator(idx + 1);
+        while(it.hasNext()) {
+            String line = it.next();
+            if(line.startsWith("//") || isBlank(line))   continue;
+            if(isSectionHeader(line))   break;
+            String[] separatedValues = line.split(",");
+            String[] returnedValues = process.apply(separatedValues);
+            if(returnedValues == null) {
+                it.remove();
+            } else {
+                it.set(String.join(",", returnedValues));
+            }
+        }
+    }
+
+    //Java 8 alternative for Java 11's String.isBlank() method
+    private boolean isBlank(String line) {
+        return line.chars().anyMatch(c -> !Character.isWhitespace(c));
     }
 }
