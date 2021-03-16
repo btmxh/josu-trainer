@@ -95,7 +95,7 @@ public class Beatmap {
             }
         }
         scaleBeatmapTiming();
-        Files.write(mapFile, lines, StandardCharsets.UTF_8, StandardOpenOption.CREATE);
+        Files.write(mapsetDir.resolve(createFilename()), lines, StandardCharsets.UTF_8, StandardOpenOption.CREATE);
     }
 
     /**
@@ -174,7 +174,7 @@ public class Beatmap {
         int idx = getPropertyLineIndex(section, key);
         if(idx == -1)   return null;
         String line = lines.get(getPropertyLineIndex(section, key));
-        return line.substring(key.length() + 1);
+        return line.substring(key.length() + 1).trim();
     }
 
     /**
@@ -255,7 +255,7 @@ public class Beatmap {
 
     //Java 8 alternative for Java 11's String.isBlank() method
     private boolean isBlank(String line) {
-        return line.chars().anyMatch(c -> !Character.isWhitespace(c));
+        return line.chars().allMatch(Character::isWhitespace);
     }
 
     //Java 8 alternative for Java 9's InputStream.transferTo(OutputStream) method (with some modifications)
@@ -310,7 +310,8 @@ public class Beatmap {
     private String speedUpAudio() throws IOException {
         String oldAudio = get("General", "AudioFilename");
         if(oldAudio == null || isBlank(oldAudio))   return null;
-        String newFilename = "josutrainer-audio-" + speedUpRate + ".mp3";
+        String newFilename = "josutrainer-" + speedUpRate + "-" + oldAudio;
+        Path oldFile = mapsetDir.resolve(oldAudio);
         Path newFile = mapsetDir.resolve(newFilename);
         double rate = speedUpRate;
         if(!Files.exists(newFile)) {
@@ -324,7 +325,7 @@ public class Beatmap {
                 rate /= 0.5;
             }
             atempo.append("atempo=").append(rate);
-            String cmd =  "\"" + FFMPEG + "\" -i \"" + oldAudio + "\" -filter:a \"" + atempo + "\" -vn \"" + newFile.toAbsolutePath().toString() + "\" -y";
+            String cmd =  "\"" + FFMPEG + "\" -i \"" + oldFile.toAbsolutePath().toString() + "\" -filter:a \"" + atempo + "\" -vn \"" + newFile.toAbsolutePath().toString() + "\" -y";
             System.out.println(cmd);
             Process process = Runtime.getRuntime().exec(cmd);
             new Thread(() -> transferTo(process.getInputStream(), System.out)).start();
@@ -339,6 +340,11 @@ public class Beatmap {
                     e.printStackTrace();
                 }
             }).start();
+            try {
+                process.waitFor();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         return newFilename;
