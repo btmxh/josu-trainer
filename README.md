@@ -6,13 +6,30 @@ The reason that I made this is because osu-trainer crashes every time when I lau
 
 This also included a interop module for [gosu-memory](https://github.com/l3lackShark/gosumemory) to find the current playing map.
 
+## Run
+
+After that, download the lastest release from [here](https://github.com/ngoduyanh/josu-trainer/releases), and extract it. The GUI app should be in the bin folder, and named josu-trainer(.bat if on Windows)
+
+In order to speed up/slow down audio, you need [ffmpeg](https://www.ffmpeg.org). You can find Windows build [here](https://www.gyan.dev/ffmpeg/builds/). On Mac and Linux, you should use your package manager to install it. You should put ffmpeg executable into your PATH. If you don't want to do it, check the [Configurations](#configurations-not-tested) section.
+
+Note: You don't need Java to run the program.
+
+## Configurations (NOT TESTED)
+
+You can configure the GUI app by placing a file named josutrainer-config.properties in the same directory as the executable. There are several configurations:
+
+* ffmpeg - path to your ffmpeg executable (if you don't want to put it into PATH)
+* gosu_memory_url - URL of outputted JSON from gosumemory
+* update_interval - time in milliseconds between each update (an update is when the program read gosumemory's outputted JSON), setting it too low may make your CPU to parse too much JSON and cause you some top play chokes
+
+(yeah I don't phrase it that well)
+
 ## Dependencies
 
 * [jackson](https://github.com/FasterXML/jackson-databind) (licensed under Apache License 2.0) to parse JSON
-
 * [junit5](https://github.com/junit-team/junit5) (licensed under Eclipse Public License) for unit tests
-
 * [openjfx](https://github.com/openjdk/jfx) (licensed under GPL v2 with the Classpath exception) for GUI
+* [ffmpeg](https://www.ffmpeg.org) (licensed under LGPL v2.1) to speed up/slow down audio (via the command line)
 
 This project, although not directly, also depends on [gosu-memory](https://github.com/l3lackShark/gosumemory) to get current osu! memory data.
 
