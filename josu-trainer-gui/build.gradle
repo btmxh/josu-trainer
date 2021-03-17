@@ -1,14 +1,24 @@
+def currentOS = org.gradle.nativeplatform.platform.internal.DefaultNativePlatform.currentOperatingSystem;
+def platform
+if (currentOS.isWindows()) {
+     platform = 'win'
+} else if (currentOS.isLinux()) {
+     platform = 'linux'
+} else if (currentOS.isMacOsX()) {
+     platform = 'mac'
+}
+
 dependencies {
+    implementation "org.openjfx:javafx-base:15.0.1:${platform}"
+    implementation "org.openjfx:javafx-controls:15.0.1:${platform}"
+    implementation "org.openjfx:javafx-graphics:15.0.1:${platform}"
     implementation project(':gosu-memory-interop')
     implementation project(':josu-trainer-core')
 }
 
 application {
-    mainClassName = 'com.dah.josutrainer.gui.MainApp'
-}
-
-javafx {
-    modules = [ 'javafx.controls' ]
+    mainModule = 'josutrainer.gui'
+    mainClass = 'com.dah.josutrainer.gui.Launcher'
 }
 
 jlink {
