@@ -25,7 +25,10 @@ import java.util.stream.Collectors;
  * A osu! beatmap, in which content are loaded to memory and can be saved by calling {@link #save()} or {@link #save(String)}
  */
 public class Beatmap {
-    public static final String FFMPEG = "ffmpeg";   //TODO: make this customizable
+    /**
+     * Location of ffmpeg executable (or just "ffmpeg" if it's already in PATH)
+     */
+    public static String FFMPEG = "ffmpeg";
     /**
      * <code>.osu</code> file content loaded into memory
      */
@@ -253,24 +256,6 @@ public class Beatmap {
         }
     }
 
-    //Java 8 alternative for Java 11's String.isBlank() method
-    private boolean isBlank(String line) {
-        return line.chars().allMatch(Character::isWhitespace);
-    }
-
-    //Java 8 alternative for Java 9's InputStream.transferTo(OutputStream) method (with some modifications)
-    private void transferTo(InputStream inputStream, OutputStream outputStream) {
-        try {
-            byte[] buffer = new byte[8192];
-            int read;
-            while ((read = inputStream.read(buffer)) >= 0) {
-                outputStream.write(buffer, 0, read);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();    //Logging ffmpeg output is not that important, we can suppress the error.
-        }
-    }
-
     /**
      * Set approach rate (AR) value
      * @param ar AR value
@@ -370,15 +355,9 @@ public class Beatmap {
         speedUp(1.0 / rate);
     }
 
-    //Helper function, should be self explanatory
-    private String divideLong(String str) {
-        return Long.toString((long) (parseLongSafe(str) / speedUpRate));
-    }
-
-    private String divideDouble(String str) {
-        return Double.toString(parseDoubleSafe(str) / speedUpRate);
-    }
-
+    /**
+     * Scale beatmap timing by <code>speedUpRate</code>
+     */
     private void scaleBeatmapTiming() {
         String bookmarks = get("Editor", "Bookmarks");
         if(bookmarks != null) {
@@ -426,6 +405,15 @@ public class Beatmap {
         });
     }
 
+    //Helper functions, should be self explanatory
+    private String divideLong(String str) {
+        return Long.toString((long) (parseLongSafe(str) / speedUpRate));
+    }
+
+    private String divideDouble(String str) {
+        return Double.toString(parseDoubleSafe(str) / speedUpRate);
+    }
+
     private long parseLongSafe(String s) {
         try {
             return Long.parseLong(s);
@@ -441,6 +429,24 @@ public class Beatmap {
         } catch (NumberFormatException | NullPointerException e) {
             System.out.println("WARNING: Invalid decimal value '" + s + "'");
             return 0.0;
+        }
+    }
+
+    //Java 8 alternative for Java 11's String.isBlank() method
+    private boolean isBlank(String line) {
+        return line.chars().allMatch(Character::isWhitespace);
+    }
+
+    //Java 8 alternative for Java 9's InputStream.transferTo(OutputStream) method (with some modifications)
+    private void transferTo(InputStream inputStream, OutputStream outputStream) {
+        try {
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = inputStream.read(buffer)) >= 0) {
+                outputStream.write(buffer, 0, read);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();    //Logging ffmpeg output is not that important, we can suppress the error.
         }
     }
 }
