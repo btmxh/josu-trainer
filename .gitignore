@@ -2,3 +2,9 @@
 /.idea/
 build/
 lombok.config
+
+#VS Code generated files
+bin/
+.settings
+.classpath
+.project
