@@ -19,8 +19,8 @@ allprojects {
         apply plugin: 'org.beryx.jlink'
     }
 
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
+    sourceCompatibility = 11
+    targetCompatibility = 11
 
     repositories {
         mavenCentral()
@@ -33,5 +33,9 @@ allprojects {
 
     test {
         useJUnitPlatform()
+    }
+
+    java {
+        modularity.inferModulePath = true
     }
 }
