@@ -43,10 +43,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class MainApp extends Application {
-    public static void main(String[] args) {
-        launch(args);
-    }
-
     private long updateInterval = 2000;
     private final GosuMemoryLoader loader = new GosuMemoryLoader();
     private GosuMemData data;
