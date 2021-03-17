@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.dah'
-version '0.1'
+version '0.1-alpha'
 
 allprojects {
     apply plugin: 'java'
