@@ -9,9 +9,10 @@ if (currentOS.isWindows()) {
 }
 
 dependencies {
-    implementation "org.openjfx:javafx-base:15.0.1:${platform}"
-    implementation "org.openjfx:javafx-controls:15.0.1:${platform}"
-    implementation "org.openjfx:javafx-graphics:15.0.1:${platform}"
+    implementation "org.openjfx:javafx-base:11.0.1:${platform}"
+    implementation "org.openjfx:javafx-controls:11.0.1:${platform}"
+    implementation "org.openjfx:javafx-graphics:11.0.1:${platform}"
+    implementation 'org.controlsfx:controlsfx:11.1.0'
     implementation project(':gosu-memory-interop')
     implementation project(':josu-trainer-core')
 }
