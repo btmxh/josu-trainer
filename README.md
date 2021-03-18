@@ -26,6 +26,13 @@ You can configure the GUI app by placing a file named josutrainer-config.propert
 
 (yeah I don't phrase it that well)
 
+Config file format:
+```properties
+ffmpeg=path/to/ffmpeg/executable
+gosu_memory_url=http://localhost:727/json
+# etc...
+```
+
 ## Dependencies
 
 * [jackson](https://github.com/FasterXML/jackson-databind) (licensed under Apache License 2.0) to parse JSON
