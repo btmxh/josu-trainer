@@ -10,6 +10,8 @@ This also included a interop module for [gosu-memory](https://github.com/l3lackS
 
 After that, download the lastest release from [here](https://github.com/ngoduyanh/josu-trainer/releases), and extract it. The GUI app should be in the bin folder, and named josu-trainer(.bat if on Windows)
 
+You also need to run [gosu-memory](https://github.com/l3lackShark/gosumemory) for the program to read osu! memory data.
+
 In order to speed up/slow down audio, you need [ffmpeg](https://www.ffmpeg.org). You can find Windows build [here](https://www.gyan.dev/ffmpeg/builds/). On Mac and Linux, you should use your package manager to install it. You should put ffmpeg executable into your PATH. If you don't want to do it, check the [Configurations](#configurations-not-tested) section.
 
 Note: You don't need Java to run the program.
