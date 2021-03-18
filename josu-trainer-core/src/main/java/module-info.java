@@ -1,5 +1,4 @@
 module josutrainer.core {
-    requires gmi;
-    requires java.base;
+    requires transitive gmi;
     exports com.dah.josutrainer.core;
 }
