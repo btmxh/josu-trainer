@@ -3,17 +3,16 @@ package com.dah.josutrainer.gui;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.dah.gmi.GosuMemoryLoader;
@@ -27,13 +26,9 @@ import org.controlsfx.glyphfont.Glyph;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.Property;
-import javafx.beans.value.ChangeListener;
-import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -47,20 +42,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.GaussianBlur;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundImage;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -74,6 +58,7 @@ public class MainApp extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
+        //Load user config
         File file = new File("josutrainer-config.properties");
         if (file.exists()) {
             Properties config = new Properties();
@@ -103,31 +88,20 @@ public class MainApp extends Application {
 
         AnchorPane root = new AnchorPane();
 
-        GosuMemoryLoader loader = new GosuMemoryLoader();
-
-        GridPane mapStatPane = new GridPane();
-        mapStatPane.setVgap(2.0);
-        mapStatPane.setHgap(2.0);
-        mapStatPane.setPadding(new Insets(4.0));
-        VBox.setVgrow(mapStatPane, Priority.ALWAYS);
-
-        ImageView mapBackground = new WrappedImageView();
-        mapBackground.fitWidthProperty().addListener(e -> changeViewport(mapBackground));
-        mapBackground.fitHeightProperty().addListener(e -> changeViewport(mapBackground));
-        mapBackground.imageProperty().addListener(e -> changeViewport(mapBackground));
+        WrappedImageView mapBackground = new WrappedImageView();
+        mapBackground.fitWidthProperty().addListener(e -> mapBackground.centerImage());
+        mapBackground.fitHeightProperty().addListener(e -> mapBackground.centerImage());
+        mapBackground.imageProperty().addListener(e -> mapBackground.centerImage());
+        GaussianBlur blur = new GaussianBlur(8.0);
+        ColorAdjust adjust = new ColorAdjust();
+        adjust.setBrightness(-0.5);
+        adjust.setInput(blur);
+        mapBackground.setEffect(adjust);
 
         AnchorPane.setTopAnchor(mapBackground, 0.0);
         AnchorPane.setLeftAnchor(mapBackground, 0.0);
         AnchorPane.setRightAnchor(mapBackground, 0.0);
         AnchorPane.setBottomAnchor(mapBackground, 250.0);
-
-        {
-            GaussianBlur blur = new GaussianBlur(4.0);
-            ColorAdjust adjust = new ColorAdjust();
-            adjust.setBrightness(-0.5);
-            adjust.setInput(blur);
-            mapBackground.setEffect(adjust);
-        }
 
         Label songName = new Label("Kano - [It's not] World's end");
         songName.setTextOverrun(OverrunStyle.ELLIPSIS);
@@ -145,6 +119,12 @@ public class MainApp extends Application {
         AnchorPane.setLeftAnchor(mapInfoBox, 0.0);
         AnchorPane.setRightAnchor(mapInfoBox, 0.0);
         AnchorPane.setBottomAnchor(mapInfoBox, 250.0);
+
+        GridPane mapStatPane = new GridPane();
+        mapStatPane.setVgap(2.0);
+        mapStatPane.setHgap(2.0);
+        mapStatPane.setPadding(new Insets(4.0));
+        VBox.setVgrow(mapStatPane, Priority.ALWAYS);
 
         Slider ar = beatmapStat(mapStatPane, "AR", 10.0, 0);
         Slider cs = beatmapStat(mapStatPane, "CS", 3.5, 1);
@@ -206,15 +186,44 @@ public class MainApp extends Application {
         AnchorPane.setLeftAnchor(buttons, 0.0);
         AnchorPane.setRightAnchor(buttons, 0.0);
 
+        root.getChildren().setAll(mapBackground, mapInfoBox, mapStatPane, buttons);
+        Scene scene = new Scene(root);
+
+        // Add css from file (reloadable in runtime, not available in builds)
+        // scene.getStylesheets().add(new
+        // File("src/main/resources/modena-dark.css").toURI().toURL().toExternalForm());
+        // scene.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<>() {
+        // final KeyCombination refreshCss = new KeyCodeCombination(KeyCode.R,
+        // KeyCombination.CONTROL_DOWN);
+        //
+        // public void handle(KeyEvent e) {
+        // if (refreshCss.match(e)) {
+        // List<String> copy = new ArrayList<>(scene.getStylesheets());
+        // scene.getStylesheets().clear();
+        // scene.getStylesheets().addAll(copy);
+        // e.consume();
+        // }
+        // }
+        // });
+
+        // Add css from resource
+        scene.getStylesheets().add(getClass().getResource("/modena-dark.css").toExternalForm());
+
+        stage.setTitle("josu-trainer");
+        stage.setScene(scene);
+        stage.getIcons().add(new Image(getClass().getResourceAsStream("/josutrainer.png")));
+
+        //App logic
         resetButton.setOnAction(e -> {
             if (data == null)
                 return;
             GosuBeatmap map = data.getMenu().getBm();
 
             try {
-                mapBackground
-                        .setImage(new Image(Files.newInputStream(Paths.get(data.getSettings().getFolders().getSongs(),
-                                map.getPath().getFolder(), map.getPath().getBg()))));
+                Path imageFile = Paths.get(data.getSettings().getFolders().getSongs(), map.getPath().getFolder(),
+                        map.getPath().getBg());
+                InputStream inputStream = Files.newInputStream(imageFile);
+                mapBackground.setImage(new Image(inputStream));
             } catch (IOException ioe) {
                 ioe.printStackTrace();
             }
@@ -241,6 +250,7 @@ public class MainApp extends Application {
             }
             diffName.setText(map.getMetadata().getDifficulty());
         });
+
         generateButton.setOnAction(e -> {
             if (data == null)
                 return;
@@ -252,34 +262,11 @@ public class MainApp extends Application {
                 map.setCS(cs.getValue());
                 map.speedUp(speed.getValue());
                 map.save(diffName.getText());
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
             }
         });
 
-        root.getChildren().setAll(mapBackground, mapInfoBox, mapStatPane, buttons);
-        Scene scene = new Scene(root);
-        // Add css from file (reloadable in runtime)
-        // scene.getStylesheets().add(new File("src/main/resources/modena-dark.css").toURI().toURL().toExternalForm());
-        // scene.addEventFilter(KeyEvent.KEY_PRESSED, new EventHandler<>() {
-        //     final KeyCombination refreshCss = new KeyCodeCombination(KeyCode.R, KeyCombination.CONTROL_DOWN);
-        //
-        //     public void handle(KeyEvent e) {
-        //         if (refreshCss.match(e)) {
-        //             List<String> copy = new ArrayList<>(scene.getStylesheets());
-        //             scene.getStylesheets().clear();
-        //             scene.getStylesheets().addAll(copy);
-        //             e.consume();
-        //         }
-        //     }
-        // });
-
-        // Add css from resource
-        scene.getStylesheets().add(getClass().getResource("/modena-dark.css").toExternalForm());
-
-        stage.setTitle("josu-trainer");
-        stage.setScene(scene);
-        stage.getIcons().add(new Image(getClass().getResourceAsStream("/josutrainer.png")));
         Supplier<Boolean> tryToLoadGosuMemoryData = () -> {
             try {
                 String lastMapIdentifier = data == null ? null : getMapIdentifier(data.getMenu().getBm());
@@ -293,9 +280,11 @@ public class MainApp extends Application {
                 return false;
             }
         };
+
         stage.setWidth(300);
         stage.setHeight(450);
         stage.show();
+
         if (!tryToLoadGosuMemoryData.get()) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "The program will still try to load data...", ButtonType.OK);
             alert.setTitle("Error");
@@ -319,7 +308,8 @@ public class MainApp extends Application {
         });
     }
 
-    private String getMapIdentifier(GosuBeatmap map) {
+    //Helper functions
+    private static String getMapIdentifier(GosuBeatmap map) {
         return map.getMetadata().getArtist() + " - " + map.getMetadata().getTitle() + " ["
                 + map.getMetadata().getDifficulty() + "] (mapped by " + map.getMetadata().getMapper() + ")";
     }
@@ -329,18 +319,7 @@ public class MainApp extends Application {
         return data == null ? 200.0 : data.getMenu().getBm().getStats().getBpm().getMax();
     }
 
-    private void changeViewport(ImageView mapBackground) {
-        // TODO: center and preserve aspect ratio
-        if (mapBackground.getImage() == null)
-            return;
-
-        double iw = mapBackground.getImage().getWidth();
-        double ih = mapBackground.getImage().getHeight();
-
-        mapBackground.setViewport(new Rectangle2D(0.0, 0.0, iw, ih));
-    }
-
-    private Slider beatmapStat(GridPane mapStatPane, String name, double initialValue, int row) {
+    private static Slider beatmapStat(GridPane mapStatPane, String name, double initialValue, int row) {
         Label label = new Label(name);
         Slider slider = new Slider(0.0, 11.0, initialValue);
         Spinner<Double> spinner = doubleSpinner(0, 11, initialValue, 0.1);
@@ -385,104 +364,5 @@ public class MainApp extends Application {
             graphic.setIcon(newValue ? FontAwesome.Glyph.LOCK : FontAwesome.Glyph.UNLOCK_ALT);
         });
         return button;
-    }
-
-    // From:
-    // https://stackoverflow.com/questions/32781362/centering-an-image-in-an-imageview
-    private static class WrappedImageView extends ImageView {
-        WrappedImageView() {
-            setPreserveRatio(false);
-        }
-
-        @Override
-        public double minWidth(double height) {
-            return 40;
-        }
-
-        @Override
-        public double prefWidth(double height) {
-            Image I = getImage();
-            if (I == null)
-                return minWidth(height);
-            return I.getWidth();
-        }
-
-        @Override
-        public double maxWidth(double height) {
-            return 16384;
-        }
-
-        @Override
-        public double minHeight(double width) {
-            return 40;
-        }
-
-        @Override
-        public double prefHeight(double width) {
-            Image I = getImage();
-            if (I == null)
-                return minHeight(width);
-            return I.getHeight();
-        }
-
-        @Override
-        public double maxHeight(double width) {
-            return 16384;
-        }
-
-        @Override
-        public boolean isResizable() {
-            return true;
-        }
-
-        @Override
-        public void resize(double width, double height) {
-            setFitWidth(width);
-            setFitHeight(height);
-        }
-    }
-
-    // From:
-    // https://stackoverflow.com/questions/60341778/bindbidirectional-with-function
-    public static class BidirectionalBinding<T, U> {
-
-        private final Property<T> source;
-        private final Property<U> target;
-
-        private final ChangeListener<? super T> sourceListener;
-        private final ChangeListener<? super U> targetListener;
-        private boolean changing = false;
-
-        public BidirectionalBinding(Property<T> source, Property<U> target, Function<T, U> mapping,
-                Function<U, T> inverseMapping) {
-            this.source = source;
-            this.target = target;
-
-            target.setValue(mapping.apply(source.getValue()));
-
-            sourceListener = (obs, oldSourceValue, newSourceValue) -> {
-                if (!changing) {
-                    changing = true;
-                    target.setValue(mapping.apply(newSourceValue));
-                }
-                changing = false;
-            };
-            source.addListener(sourceListener);
-
-            targetListener = (obs, oldTargetValue, newTargetValue) -> {
-                if (!changing) {
-                    changing = true;
-                    source.setValue(inverseMapping.apply(newTargetValue));
-                }
-                changing = false;
-            };
-            target.addListener(targetListener);
-
-        }
-
-        public void unbind() {
-            source.removeListener(sourceListener);
-            target.removeListener(targetListener);
-        }
     }
 }
