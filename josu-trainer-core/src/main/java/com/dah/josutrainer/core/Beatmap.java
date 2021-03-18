@@ -405,6 +405,19 @@ public class Beatmap {
         });
     }
 
+    /**
+     * Add osutrainer (for compability with FunOrange's osu-trainer) to beatmap tags.
+     */
+    public void addJosuTrainerTag() {
+        String tags = get("Metadata", "Tags");
+        if(tags == null) {
+            tags = "osutrainer";
+        } else {
+            tags += " osutrainer";
+        }
+        set("Metadata", "Tags", tags);
+    }
+
     //Helper functions, should be self explanatory
     private String divideLong(String str) {
         return Long.toString((long) (parseLongSafe(str) / speedUpRate));

@@ -1,26 +1,22 @@
 plugins {
     id 'java'
     id 'application'
-    id 'io.freefair.lombok' version '5.3.0'
-    id 'org.openjfx.javafxplugin' version '0.0.9'
     id 'org.beryx.jlink' version '2.23.1'
 }
 
 group 'com.dah'
-version '0.1'
+version '0.1-alpha'
 
 allprojects {
     apply plugin: 'java'
-    apply plugin: 'io.freefair.lombok'
 
     if(name == "josu-trainer-gui") {
         apply plugin: 'application'
-        apply plugin: 'org.openjfx.javafxplugin'
         apply plugin: 'org.beryx.jlink'
     }
 
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
+    sourceCompatibility = 11
+    targetCompatibility = 11
 
     repositories {
         mavenCentral()
@@ -33,5 +29,9 @@ allprojects {
 
     test {
         useJUnitPlatform()
+    }
+
+    java {
+        modularity.inferModulePath = true
     }
 }
