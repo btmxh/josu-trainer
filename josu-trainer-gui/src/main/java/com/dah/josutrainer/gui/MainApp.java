@@ -261,6 +261,7 @@ public class MainApp extends Application {
                 map.setHP(hp.getValue());
                 map.setCS(cs.getValue());
                 map.speedUp(speed.getValue());
+                map.addJosuTrainerTag();
                 map.save(diffName.getText());
             } catch (IOException ioe) {
                 ioe.printStackTrace();
