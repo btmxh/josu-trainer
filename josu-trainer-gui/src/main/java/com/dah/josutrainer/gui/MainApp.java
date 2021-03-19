@@ -26,6 +26,7 @@ import org.controlsfx.glyphfont.Glyph;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
+import javafx.concurrent.Task;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -39,6 +40,7 @@ import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.Slider;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.GaussianBlur;
 import javafx.scene.image.Image;
@@ -254,18 +256,28 @@ public class MainApp extends Application {
         generateButton.setOnAction(e -> {
             if (data == null)
                 return;
-            try {
-                Beatmap map = new Beatmap(data);
-                map.setAR(ar.getValue());
-                map.setOD(od.getValue());
-                map.setHP(hp.getValue());
-                map.setCS(cs.getValue());
-                map.speedUp(speed.getValue());
-                map.addJosuTrainerTag();
-                map.save(diffName.getText());
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
-            }
+            Task<Void> outputTask = new Task<>() {
+                @Override
+                protected Void call() throws Exception {
+                    Beatmap map = new Beatmap(data);
+                    map.setAR(ar.getValue());
+                    map.setOD(od.getValue());
+                    map.setHP(hp.getValue());
+                    map.setCS(cs.getValue());
+                    map.speedUp(speed.getValue());
+                    map.addJosuTrainerTag();
+                    map.save(diffName.getText());
+                    return null;
+                }
+            };
+            outputTask.setOnFailed(fe -> {
+                outputTask.getException().printStackTrace();
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Output error");
+                alert.setTitle("Error");
+                alert.showAndWait();
+            });
+            outputTask.setOnSucceeded(se -> System.out.println("Beatmap generated successfully"));
+            new Thread(outputTask).start();
         });
 
         Supplier<Boolean> tryToLoadGosuMemoryData = () -> {
