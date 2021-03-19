@@ -39,6 +39,8 @@ gosu_memory_url=http://localhost:727/json
 * [junit5](https://github.com/junit-team/junit5) (licensed under Eclipse Public License) for unit tests
 * [openjfx](https://github.com/openjdk/jfx) (licensed under GPL v2 with the Classpath exception) for GUI
 * [ffmpeg](https://www.ffmpeg.org) (licensed under LGPL v2.1) to speed up/slow down audio (via the command line)
+* [controlsfx](https://github.com/controlsfx/controlsfx) (licensed under BSD) for better JavaFX GUI
+* 
 
 This project, although not directly, also depends on [gosu-memory](https://github.com/l3lackShark/gosumemory) to get current osu! memory data.
 
