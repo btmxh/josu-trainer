@@ -1,4 +1,10 @@
 # josu-trainer
+
+## ARCHIVED
+Since FunOrange finally patched the Windows 7 bug, and I upgraded to Windows 10, this program is not needed anymore, so I'm gonna archive this repo.
+
+## General
+
 A Java rewrite of FunOrange's osu-trainer, with minimal dependencies
 
 The reason that I made this is because osu-trainer crashes every time when I launched it on my system. I've checked the code and tried to rebuild the program in Visual Studio but I had some issues. I also want to try some osu! related programming.
