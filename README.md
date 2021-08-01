@@ -61,6 +61,10 @@ The executable will be called josu-trainer (on Mac or Linux) or josu-trainer.bat
 
 Note: You just need Java to build the program, the release already included a small JRE built by jlink.
 
+## Run
+
+If you just want to run the program, just do ```gradlew :josu-trainer-gui:run```
+
 ## Copyright
 
 I guess I'm stealing FunOrange's original work, so if you (FunOrange) wants me to delete this repo, you can DM me on Twitter (@majotb420) to make this repo private.
