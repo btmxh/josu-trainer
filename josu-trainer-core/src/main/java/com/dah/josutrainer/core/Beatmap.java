@@ -310,9 +310,14 @@ public class Beatmap {
                 rate /= 0.5;
             }
             atempo.append("atempo=").append(rate);
-            String cmd =  "\"" + FFMPEG + "\" -i \"" + oldFile.toAbsolutePath().toString() + "\" -filter:a \"" + atempo + "\" -vn \"" + newFile.toAbsolutePath().toString() + "\" -y";
+            String cmd =  "\"" + FFMPEG + "\" -i \"" + oldFile.toAbsolutePath().toString() +
+                    "\" -filter:a \"" + atempo + "\" -vn \"" + newFile.toAbsolutePath().toString() + "\" -y";
             System.out.println(cmd);
-            Process process = Runtime.getRuntime().exec(cmd);
+            String[] cmdarray = {
+                    FFMPEG, "-i", oldFile.toAbsolutePath().toString(), "-filter:a",
+                    atempo.toString(), "-vn", newFile.toAbsolutePath().toString(), "-y"
+            };
+            Process process = Runtime.getRuntime().exec(cmdarray);
             new Thread(() -> transferTo(process.getInputStream(), System.out)).start();
             new Thread(() -> transferTo(process.getErrorStream(), System.err)).start();
             new Thread(() -> {
