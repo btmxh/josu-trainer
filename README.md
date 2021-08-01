@@ -49,6 +49,8 @@ gosu_memory_url=http://localhost:727/json
 
 This project, although not directly, also depends on [gosu-memory](https://github.com/l3lackShark/gosumemory) to get current osu! memory data.
 
+I also got modena-dark.css from https://github.com/joffrey-bion/javafx-themes/blob/master/css/modena_dark.css
+
 ## Build
 
 In order to build executables, you need JDK 11+ (for modules to work, maybe I'll add Java 8 support in the future). Just run this in the terminal: 
