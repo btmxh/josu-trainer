@@ -36,7 +36,7 @@ public class Beatmap {
     /**
      * Mapset directory of this beatmap
      */
-    private final Path mapsetDir;
+    private Path mapsetDir;
     /**
      * The <code>.osu</code> file of this beatmap. This is the original file that this map was generated from, and will not change when calling {@link #save()}
      */
@@ -84,6 +84,10 @@ public class Beatmap {
      */
     public Beatmap(GosuMemData data) throws IOException {
         this(data.getSettings().getFolders(), data.getMenu().getBm());
+    }
+
+    public Path getMapsetDir() {
+        return mapsetDir;
     }
 
     /**
@@ -215,7 +219,7 @@ public class Beatmap {
      * Create beatmap new filename depending on the modified properties
      * @return the beatmap's new filename
      */
-    private String createFilename() {
+    public String createFilename() {
         String name = get("Metadata", "Artist") + " - " +
                 get("Metadata", "Title") + " (" +
                 get("Metadata", "Creator") + ") [" +

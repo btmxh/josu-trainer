@@ -1,19 +1,16 @@
 package com.dah.josutrainer.gui;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.nio.file.StandardOpenOption;
+import java.util.*;
 import java.util.function.Supplier;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import com.dah.gmi.GosuMemoryLoader;
 import com.dah.gmi.data.GosuBeatmap;
@@ -56,6 +53,10 @@ public class MainApp extends Application {
     private final GosuMemoryLoader loader = new GosuMemoryLoader();
     private GosuMemData data;
 
+    private boolean generateEmptyOsz = false;   // opening an empty osz file with the same name
+                                                // as the mapset directory will trigger a reload
+    private Path oszDirectory = null;           // only matters when generateEmptyOsz == true
+
     @Override
     public void start(Stage stage) throws Exception {
         //Load user config
@@ -72,17 +73,23 @@ public class MainApp extends Application {
                 try {
                     loader.jsonURL = new URL(config.getProperty("gosu_memory_url"));
                 } catch (MalformedURLException e) {
-                    System.err
-                            .println("Invalid gosu_memory_url value: '" + config.getProperty("gosu_memory_url") + "'");
+                    System.err.println("Invalid gosu_memory_url value: '"
+                            + config.getProperty("gosu_memory_url") + "'");
                 }
             }
             if (config.containsKey("update_interval")) {
                 try {
                     updateInterval = Long.parseLong(config.getProperty("updateInterval"));
                 } catch (NumberFormatException e) {
-                    System.err
-                            .println("Invalid update_interval value: '" + config.getProperty("update_interval") + "'");
+                    System.err.println("Invalid update_interval value: '"
+                            + config.getProperty("update_interval") + "'");
                 }
+            }
+            if (config.containsKey("generate_empty_osz")) {
+                generateEmptyOsz = Boolean.parseBoolean(config.getProperty("generate_empty_osz"));
+            }
+            if(config.containsKey("osz_directory")) {
+                oszDirectory = Path.of(config.getProperty("osz_directory"));
             }
         }
 
@@ -263,6 +270,29 @@ public class MainApp extends Application {
                 map.speedUp(speed.getValue());
                 map.addJosuTrainerTag();
                 map.save(diffName.getText());
+                if(generateEmptyOsz) {
+                    // we will create a zip file with the same name as
+                    // the mapset directory to force osu to reload the mapset
+                    if(oszDirectory == null) {
+                        oszDirectory = Path.of(data.getSettings().getFolders().getSongs())
+                                .getParent().resolve("josutrainer-osz");
+                    }
+                    if(!Files.exists(oszDirectory)) {
+                        Files.createDirectory(oszDirectory);
+                    }
+                    Path mapsetDir = map.getMapsetDir();
+                    Path zipFile = oszDirectory.resolve(mapsetDir.getFileName() + ".osz");
+
+                    ZipOutputStream zipos = new ZipOutputStream(
+                            Files.newOutputStream(zipFile, StandardOpenOption.CREATE));
+                    // we need to put something in this zip file, because
+                    // osu! ignores empty files
+                    String mapFilename = map.createFilename();
+                    zipos.putNextEntry(new ZipEntry(mapFilename));
+                    zipos.write(Files.readAllBytes(mapsetDir.resolve(mapFilename)));
+                    zipos.close();
+                }
+
             } catch (IOException ioe) {
                 ioe.printStackTrace();
             }

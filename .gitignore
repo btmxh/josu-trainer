@@ -3,8 +3,11 @@
 build/
 lombok.config
 
-#VS Code generated files
+# VS Code generated files
 bin/
 .settings
 .classpath
 .project
+
+# Config file
+josu-trainer-gui/josutrainer-config.properties
