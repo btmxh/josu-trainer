@@ -71,5 +71,3 @@ If you just want to run the program, just do ```gradlew :josu-trainer-gui:run```
 
 I guess I'm stealing FunOrange's original work, so if you (FunOrange) wants me to delete this repo, you can DM me on Twitter (@majotb420) to make this repo private.
 
-Also, this repo will be licensed under UNLICENSE (no one will use this code tbh).
-
