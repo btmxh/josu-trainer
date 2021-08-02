@@ -2,7 +2,7 @@
 
 ## ~~ARCHIVED~~
 ~~Since FunOrange finally patched the Windows 7 bug, and I upgraded to Windows 10, this program is not needed anymore, so I'm gonna archive this repo.~~  
-Some people actually used this, so I'm maintaining this program.
+Some people actually use this, so I'm maintaining this program.
 
 ## General
 
