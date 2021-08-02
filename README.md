@@ -22,20 +22,25 @@ In order to speed up/slow down audio, you need [ffmpeg](https://www.ffmpeg.org).
 
 Note: You don't need Java to run the program.
 
-## Configurations (NOT TESTED)
+## Configurations
 
 You can configure the GUI app by placing a file named josutrainer-config.properties in the same directory as the executable. There are several configurations:
 
 * ffmpeg - path to your ffmpeg executable (if you don't want to put it into PATH)
 * gosu_memory_url - URL of outputted JSON from gosumemory
 * update_interval - time in milliseconds between each update (an update is when the program read gosumemory's outputted JSON), setting it too low may make your CPU to parse too much JSON and cause you some top play chokes
+* generate_empty_osz - if true, the program will generate a dummy osz file for you to force reload the mapset. This could be useful if you're running osu! by wine (these osz files are not empty, the name will probably change soon)
+* osz_directory - the directory to generate "empty" osz files. Setting it to the Songs directory will make osu! auto-import the map (if it doesn't you need to press F5, it doesn't trigger a full reprocess).
 
 (yeah I don't phrase it that well)
+
+> If you run the program directly (using `gradlew :josu-trainer-gui:run`), you need to put the config file in the josu-trainer-gui directory.
 
 Config file format:
 ```properties
 ffmpeg=path/to/ffmpeg/executable
 gosu_memory_url=http://localhost:727/json
+generate_empty_osz=true
 # etc...
 ```
 
