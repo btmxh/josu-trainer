@@ -300,9 +300,11 @@ public class MainApp extends Application {
 
         Supplier<Boolean> tryToLoadGosuMemoryData = () -> {
             try {
-                String lastMapIdentifier = data == null ? null : getMapIdentifier(data.getMenu().getBm());
+                String lastMapIdentifier = data == null ? null :
+                        (data.getMenu() == null? null : getMapIdentifier(data.getMenu().getBm()));
                 data = loader.load();
-                if (!Objects.equals(lastMapIdentifier, getMapIdentifier(data.getMenu().getBm()))) {
+                if (data != null && data.getMenu() != null &&
+                        !Objects.equals(lastMapIdentifier, getMapIdentifier(data.getMenu().getBm()))) {
                     Platform.runLater(resetButton::fire);
                 }
                 return true;
