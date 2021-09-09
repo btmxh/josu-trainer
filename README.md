@@ -45,6 +45,8 @@ generate_empty_osz=true
 # etc...
 ```
 
+Note: If you launch josu-trainer from another directory, the config file will be loaded from that directory.
+
 ## Dependencies
 
 * [jackson](https://github.com/FasterXML/jackson-databind) (licensed under Apache License 2.0) to parse JSON
