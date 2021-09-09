@@ -60,7 +60,9 @@ public class MainApp extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         //Load user config
+        System.out.println("moshi moshi");
         File file = new File("josutrainer-config.properties");
+        System.out.println(file);
         System.out.println(file.getAbsolutePath());
         if (file.exists()) {
             Properties config = new Properties();
@@ -97,7 +99,8 @@ public class MainApp extends Application {
             System.out.println(generateEmptyOsz);
             System.out.println(config);
         }
-
+        
+        System.exit(1);
         AnchorPane root = new AnchorPane();
 
         WrappedImageView mapBackground = new WrappedImageView();
