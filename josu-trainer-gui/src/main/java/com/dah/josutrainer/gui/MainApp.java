@@ -270,6 +270,7 @@ public class MainApp extends Application {
                 map.speedUp(speed.getValue());
                 map.addJosuTrainerTag();
                 map.save(diffName.getText());
+                System.out.println(generateEmptyOsz);
                 if(generateEmptyOsz) {
                     // we will create a zip file with the same name as
                     // the mapset directory to force osu to reload the mapset
@@ -277,6 +278,7 @@ public class MainApp extends Application {
                         oszDirectory = Path.of(data.getSettings().getFolders().getSongs())
                                 .getParent().resolve("josutrainer-osz");
                     }
+                    System.out.println(oszDirectory);
                     if(!Files.exists(oszDirectory)) {
                         Files.createDirectory(oszDirectory);
                     }
@@ -291,6 +293,8 @@ public class MainApp extends Application {
                     zipos.putNextEntry(new ZipEntry(mapFilename));
                     zipos.write(Files.readAllBytes(mapsetDir.resolve(mapFilename)));
                     zipos.close();
+                    System.out.println(zipFile);
+                    System.out.println(mapFilename);
                 }
 
             } catch (IOException ioe) {
