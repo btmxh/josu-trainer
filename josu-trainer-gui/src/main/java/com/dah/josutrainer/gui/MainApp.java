@@ -61,10 +61,10 @@ public class MainApp extends Application {
     public void start(Stage stage) throws Exception {
         //Load user config
         File file = new File("josutrainer-config.properties");
-        System.out.println(file.toAbsolutePath());
+        System.out.println(file.getAbsolutePath());
         if (file.exists()) {
-            System.out.println(config);
             Properties config = new Properties();
+            System.out.println(config);
             FileInputStream fis = new FileInputStream(file);
             config.load(fis);
             fis.close();
