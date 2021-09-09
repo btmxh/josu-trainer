@@ -61,7 +61,9 @@ public class MainApp extends Application {
     public void start(Stage stage) throws Exception {
         //Load user config
         File file = new File("josutrainer-config.properties");
+        System.out.println(file.toAbsolutePath());
         if (file.exists()) {
+            System.out.println(config);
             Properties config = new Properties();
             FileInputStream fis = new FileInputStream(file);
             config.load(fis);
@@ -91,6 +93,9 @@ public class MainApp extends Application {
             if(config.containsKey("osz_directory")) {
                 oszDirectory = Path.of(config.getProperty("osz_directory"));
             }
+            System.out.println(config.getProperty("generate_empty_osz").length());
+            System.out.println(generateEmptyOsz);
+            System.out.println(config);
         }
 
         AnchorPane root = new AnchorPane();
