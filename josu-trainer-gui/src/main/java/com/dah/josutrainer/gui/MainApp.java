@@ -60,13 +60,9 @@ public class MainApp extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         //Load user config
-        System.out.println("moshi moshi");
         File file = new File("josutrainer-config.properties");
-        System.out.println(file);
-        System.out.println(file.getAbsolutePath());
         if (file.exists()) {
             Properties config = new Properties();
-            System.out.println(config);
             FileInputStream fis = new FileInputStream(file);
             config.load(fis);
             fis.close();
@@ -95,11 +91,8 @@ public class MainApp extends Application {
             if(config.containsKey("osz_directory")) {
                 oszDirectory = Path.of(config.getProperty("osz_directory"));
             }
-            System.out.println(config.getProperty("generate_empty_osz").length());
-            System.out.println(generateEmptyOsz);
-            System.out.println(config);
         }
-        
+
         AnchorPane root = new AnchorPane();
 
         WrappedImageView mapBackground = new WrappedImageView();
@@ -277,7 +270,6 @@ public class MainApp extends Application {
                 map.speedUp(speed.getValue());
                 map.addJosuTrainerTag();
                 map.save(diffName.getText());
-                System.out.println(generateEmptyOsz);
                 if(generateEmptyOsz) {
                     // we will create a zip file with the same name as
                     // the mapset directory to force osu to reload the mapset
@@ -285,7 +277,6 @@ public class MainApp extends Application {
                         oszDirectory = Path.of(data.getSettings().getFolders().getSongs())
                                 .getParent().resolve("josutrainer-osz");
                     }
-                    System.out.println(oszDirectory);
                     if(!Files.exists(oszDirectory)) {
                         Files.createDirectory(oszDirectory);
                     }
@@ -300,8 +291,6 @@ public class MainApp extends Application {
                     zipos.putNextEntry(new ZipEntry(mapFilename));
                     zipos.write(Files.readAllBytes(mapsetDir.resolve(mapFilename)));
                     zipos.close();
-                    System.out.println(zipFile);
-                    System.out.println(mapFilename);
                 }
 
             } catch (IOException ioe) {
