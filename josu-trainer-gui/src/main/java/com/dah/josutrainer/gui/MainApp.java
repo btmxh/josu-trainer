@@ -100,7 +100,6 @@ public class MainApp extends Application {
             System.out.println(config);
         }
         
-        System.exit(1);
         AnchorPane root = new AnchorPane();
 
         WrappedImageView mapBackground = new WrappedImageView();
