@@ -1,11 +1,11 @@
 plugins {
     id 'java'
     id 'application'
-    id 'org.beryx.jlink' version '2.23.1'
+    id 'org.beryx.jlink' version '2.24.4'
 }
 
 group 'com.dah'
-version '0.1-alpha'
+version '1.0'
 
 allprojects {
     apply plugin: 'java'
@@ -23,7 +23,7 @@ allprojects {
     }
 
     dependencies {
-        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
         testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
     }
 
