@@ -9,14 +9,19 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import com.dah.gmi.GosuMemoryLoader;
 import com.dah.gmi.data.GosuBeatmap;
+import com.dah.gmi.data.GosuBeatmapMetadata;
 import com.dah.gmi.data.GosuMemData;
 import com.dah.josutrainer.core.Beatmap;
 
+import com.dah.josutrainer.core.DTTransformer;
+import javafx.scene.input.KeyEvent;
 import org.controlsfx.glyphfont.FontAwesome;
 import org.controlsfx.glyphfont.Glyph;
 
@@ -57,6 +62,9 @@ public class MainApp extends Application {
                                                 // as the mapset directory will trigger a reload
     private Path oszDirectory = null;           // only matters when generateEmptyOsz == true
 
+    private String defaultDiffNameFormat = "${difficulty}";
+    private boolean diffNameChanged = false;
+
     @Override
     public void start(Stage stage) throws Exception {
         //Load user config
@@ -90,6 +98,9 @@ public class MainApp extends Application {
             }
             if(config.containsKey("osz_directory")) {
                 oszDirectory = Path.of(config.getProperty("osz_directory"));
+            }
+            if(config.containsKey("default_diff_name_format"))  {
+                defaultDiffNameFormat = config.getProperty("default_diff_name_format");
             }
         }
 
@@ -170,6 +181,7 @@ public class MainApp extends Application {
         });
 
         TextField diffName = new TextField("Hold my hand");
+        diffName.addEventFilter(KeyEvent.KEY_TYPED, e -> diffNameChanged = true);
 
         mapStatPane.add(new Label("Difficulty Name"), 0, 6, Integer.MAX_VALUE, 1);
         mapStatPane.add(diffName, 0, 7, Integer.MAX_VALUE, 1);
@@ -221,6 +233,33 @@ public class MainApp extends Application {
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/josutrainer.png")));
 
         //App logic
+        Runnable updateDiffName = () -> {
+            if(diffNameChanged || defaultDiffNameFormat == null) {
+                return;
+            }
+
+            Map<String, Object> mapArgs = new HashMap<>();
+            GosuBeatmapMetadata meta = data.getMenu().getBm().getMetadata();
+            mapArgs.put("title", meta.getTitle());
+            mapArgs.put("artist", meta.getArtist());
+            mapArgs.put("difficulty", meta.getDifficulty());
+            mapArgs.put("mapper", meta.getMapper());
+            mapArgs.put("ar", String.format("%.01f", ar.getValue()));
+            mapArgs.put("od", String.format("%.01f", od.getValue()));
+            mapArgs.put("hp", String.format("%.01f", hp.getValue()));
+            mapArgs.put("cs", String.format("%.01f", cs.getValue()));
+            mapArgs.put("rate", speed.getValue());
+            mapArgs.put("bpm", bpm.getValue());
+
+            diffName.setText(format(defaultDiffNameFormat, mapArgs));
+        };
+
+        ar.valueProperty().addListener((ig1, ig2, ig3) -> updateDiffName.run());
+        od.valueProperty().addListener((ig1, ig2, ig3) -> updateDiffName.run());
+        hp.valueProperty().addListener((ig1, ig2, ig3) -> updateDiffName.run());
+        cs.valueProperty().addListener((ig1, ig2, ig3) -> updateDiffName.run());
+        bpm.valueProperty().addListener((ig1, ig2, ig3) -> updateDiffName.run());
+
         resetButton.setOnAction(e -> {
             if (data == null)
                 return;
@@ -255,7 +294,8 @@ public class MainApp extends Application {
                 speed.getValueFactory().setValue(1.0);
                 bpm.getValueFactory().setValue(getCurrentMapBPM());
             }
-            diffName.setText(map.getMetadata().getDifficulty());
+            diffNameChanged = false;
+            updateDiffName.run();
         });
 
         generateButton.setOnAction(e -> {
@@ -263,8 +303,16 @@ public class MainApp extends Application {
                 return;
             try {
                 Beatmap map = new Beatmap(data);
-                map.setAR(ar.getValue());
-                map.setOD(od.getValue());
+                double arValue = ar.getValue();
+                double odValue = od.getValue();
+
+                if(arValue > 10 || odValue > 10) {
+                    arValue = DTTransformer.transformAR(arValue);
+                    odValue = DTTransformer.transformOD(odValue);
+                }
+
+                map.setAR(arValue);
+                map.setOD(odValue);
                 map.setHP(hp.getValue());
                 map.setCS(cs.getValue());
                 map.speedUp(speed.getValue());
@@ -358,7 +406,7 @@ public class MainApp extends Application {
         Spinner<Double> spinner = doubleSpinner(0, 11, initialValue, 0.1);
         new BidirectionalBinding<>(spinner.getValueFactory().valueProperty(), slider.valueProperty(), v -> v,
                 v -> Double.parseDouble(v.toString()));
-        spinner.getValueFactory().setConverter(new StringConverter<Double>() {
+        spinner.getValueFactory().setConverter(new StringConverter<>() {
             @Override
             public String toString(Double object) {
                 return object == null ? "" : String.format("%.01f", object);
@@ -378,7 +426,7 @@ public class MainApp extends Application {
     }
 
     private static Spinner<Double> doubleSpinner(double min, double max, double value, double step) {
-        Spinner<Double> spinner = new Spinner<Double>(min, max, value, step) {
+        Spinner<Double> spinner = new Spinner<>(min, max, value, step) {
             public void increment() {
                 System.out.println(getValue());
             }
@@ -397,5 +445,26 @@ public class MainApp extends Application {
             graphic.setIcon(newValue ? FontAwesome.Glyph.LOCK : FontAwesome.Glyph.UNLOCK_ALT);
         });
         return button;
+    }
+
+    public static String format(String format, Map<String, Object> values) {
+        StringBuilder formatter = new StringBuilder(format);
+        List<Object> valueList = new ArrayList<>();
+
+        Matcher matcher = Pattern.compile("\\$\\{(\\w+)}").matcher(format);
+
+        while (matcher.find()) {
+            String key = matcher.group(1);
+
+            String formatKey = String.format("${%s}", key);
+            int index = formatter.indexOf(formatKey);
+
+            if (index != -1) {
+                formatter.replace(index, index + formatKey.length(), "%s");
+                valueList.add(values.get(key));
+            }
+        }
+
+        return String.format(formatter.toString(), valueList.toArray());
     }
 }
