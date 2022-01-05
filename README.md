@@ -42,10 +42,19 @@ Config file format:
 ffmpeg=path/to/ffmpeg/executable
 gosu_memory_url=http://localhost:727/json
 generate_empty_osz=true
+default_diff_name_format=${difficulty} (${rate}x) AR${ar} OD${od}
 # etc...
 ```
 
 Note: If you launch josu-trainer from another directory, the config file will be loaded from that directory.
+
+## Default difficulty name format
+
+To make this more convenient, you can provide josu-trainer with a default diff name format, like ```${difficulty} (${rate}x) AR${ar} OD${od}``` (this should be self-explanatory enough, it's based on some python string formatting module iirc).
+
+This diff name will be synced, so for example you can adjust the AR and the diff name will automatically updated with your new AR value. But if you changed the diff name yourself, there will be no sync until you hit the reset button, or change the map.
+
+These following tags (things to put between ```${``` and ```}``` are supported: ```title```, ```artist```, ```difficulty```, ```mapper```, ```ar```, ```hp```, ```od```, ```cs```, ```rate``` (speed-up/slow-down rate), ```bpm```. Except for ```rate```, it should be self-explanatory.
 
 ## Dependencies
 
