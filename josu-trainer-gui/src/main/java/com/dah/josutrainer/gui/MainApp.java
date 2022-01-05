@@ -303,19 +303,21 @@ public class MainApp extends Application {
                 return;
             try {
                 Beatmap map = new Beatmap(data);
+                double rate = speed.getValue();
                 double arValue = ar.getValue();
                 double odValue = od.getValue();
 
                 if(arValue > 10 || odValue > 10) {
                     arValue = DTTransformer.transformAR(arValue);
                     odValue = DTTransformer.transformOD(odValue);
+                    rate /= 1.5;
                 }
 
                 map.setAR(arValue);
                 map.setOD(odValue);
                 map.setHP(hp.getValue());
                 map.setCS(cs.getValue());
-                map.speedUp(speed.getValue());
+                map.speedUp(rate);
                 map.addJosuTrainerTag();
                 map.save(diffName.getText());
                 if(generateEmptyOsz) {
