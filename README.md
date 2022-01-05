@@ -50,7 +50,7 @@ Note: If you launch josu-trainer from another directory, the config file will be
 
 ## Default difficulty name format
 
-To make this more convenient, you can provide josu-trainer with a default diff name format, like ```${difficulty} (${rate}x) AR${ar} OD${od}``` (this should be self-explanatory enough, it's based on some python string formatting module iirc).
+To make this more convenient, you can provide josu-trainer with a default diff name format, like ```${difficulty} (${rate}x) AR${ar} OD${od} based ${artist}``` (this should be self-explanatory enough, it's based on some python string formatting module iirc). When provided with [this map](https://osu.ppy.sh/beatmapsets/1044333#osu/2183206), speed up 1.3x, AR10, OD10, the default diff name is ```Over the Dreams (1.3x) AR10 OD10 based KiRaRe```
 
 This diff name will be synced, so for example you can adjust the AR and the diff name will automatically updated with your new AR value. But if you changed the diff name yourself, there will be no sync until you hit the reset button, or change the map.
 
